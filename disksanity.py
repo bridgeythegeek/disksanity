@@ -13,7 +13,7 @@ with open('WinXPSP3x86.bin', 'rb') as infile:
 	sig = struct.unpack('H', mbr[510:512])[0]
 
 	if sig != 0xAA55:
-		print "Warning! MBR is missing signature!"
+		print "**: MBR is missing signature!"
 
 	mbr_offset = 446
 
@@ -53,6 +53,8 @@ with open('WinXPSP3x86.bin', 'rb') as infile:
 					print "Start Sector (CHS)  : {0:,} [{0:x}]".format(start_sector)
 					end_sector = chs_to_sectors(part[5], part[6], part[7], number_of_heads, sectors_per_track)
 					print "End Sector (CHS)    : {0:,} [{0:x}]".format(end_sector)
+					backup_vbr_offset = (part[8] + part[9] - 1) * 512
+					print "Backup VBR (calc'd) : {0:,} [{0:x}]".format(backup_vbr_offset)
 
 					if part[9] - 1 != total_sectors_in_the_volume:
 						print "NB: Total sectors in volume should be one less than sectors in partition - it's not!"
@@ -62,6 +64,16 @@ with open('WinXPSP3x86.bin', 'rb') as infile:
 
 					if part[5] == 0xfe and part[6] == 0xff and part[7] == 0xff:
 						print "NB: Ending CHS is beyond 1024th cylinder; use LBA."
+					
+					infile.seek(backup_vbr_offset)
+					backup_vbr = infile.read(512)
+
+					backup_vbr_oem_id = backup_vbr[3:11]
+					if backup_vbr_oem_id != "NTFS    ":
+						print "**: Backup VBR missing!"
+					else:
+						if vbr != backup_vbr:
+							print "**: Backup VBR found, but doesn't match VBR!"
 
 			mbr_offset += 16
 		
