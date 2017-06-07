@@ -1,4 +1,5 @@
 import struct
+import sys
 
 def chs_to_sectors(head, byte2, byte3, nh, ns):
 
@@ -7,7 +8,11 @@ def chs_to_sectors(head, byte2, byte3, nh, ns):
 
 	return (c * nh + head) * ns + (s - 1)
 
-with open('WinXPSP3x86.bin', 'rb') as infile:
+if len(sys.argv) != 2:
+	sys.stderr.write("USAGE: {} target\n".format(sys.argv[0]))
+	sys.exit(1)
+
+with open(sys.argv[1], 'rb') as infile:
 
 	mbr = infile.read(512)
 	sig = struct.unpack('H', mbr[510:512])[0]
@@ -58,6 +63,9 @@ with open('WinXPSP3x86.bin', 'rb') as infile:
 
 					if part[9] - 1 != total_sectors_in_the_volume:
 						print "NB: Total sectors in volume should be one less than sectors in partition - it's not!"
+
+					if part[8] != hidden_sectors:
+						print "**: Hidden sectors should equal starting LBA - it doesn't!", part[8], total_sectors_in_the_volume
 
 					if part[1] == 0xfe and part[2] == 0xff and part[3] == 0xff:
 						print "NB: Starting CHS is beyond 1024th cylinder; use LBA."
