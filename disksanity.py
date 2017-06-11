@@ -37,7 +37,7 @@ class DiskSanity:
         self._LAST_SECTOR = os.path.getsize(self._IMAGE) / 512 - 1
 
         print "File Size in Bytes  : {0:,} [{0:x}]".format(os.path.getsize(self._IMAGE))
-        print "File Size as Sectors: {0:,} [{0:x}]".format(self._LAST_SECTOR + 1)
+        print "File Size in Sectors: {0:,} [{0:x}]".format(self._LAST_SECTOR + 1)
         if os.path.getsize(self._IMAGE) / float(512) > self._LAST_SECTOR + 1:
             print "**: File size is not a multiple of 512!"
 
@@ -55,12 +55,12 @@ class DiskSanity:
         infile.seek(start_offset)
         vbr = infile.read(512)
 
-        if vbr[00:03] == __NTFS_JmpBPB:
+        if vbr[0:3] == __NTFS_JmpBPB:
             print "++: Found NTFS BPB jump code."
         else:
             print "**: NTFS BPB jmup code missing!"
 
-        if vbr[03:11] == 'NTFS    ':
+        if vbr[3:11] == 'NTFS    ':
             print "++: Found NTFS OEM ID."
         else:
             print "**: NTFS OEM ID missing!"
@@ -91,8 +91,7 @@ class DiskSanity:
                 print "NB: Total sectors in volume should be one less than sectors in partition - it's not!"
 
             if part[8] != hidden_sectors:
-                print "**: Hidden sectors should equal starting LBA - it doesn't!", part[
-                    8], total_sectors_in_the_volume
+                print "**: Hidden sectors should equal starting LBA - it doesn't!", part[8], total_sectors_in_the_volume
 
             if part[1] == 0xfe and part[2] == 0xff and part[3] == 0xff:
                 print "NB: Starting CHS is beyond 1024th cylinder; use LBA."
@@ -144,7 +143,7 @@ class DiskSanity:
                     if part[4] == 0x07:  # NTFS
 
                         if start_offset / 512 > self._LAST_SECTOR:
-                            print "**: Starting sector is beyond end of input!", start_offset, self._LAST_SECTOR
+                            print "**: Starting sector is beyond end of input!"
                         else:
                             self.parse_ntfs(part, infile, start_offset)
 
@@ -168,6 +167,7 @@ class DiskSanity:
             if infile.read(8) == 'NTFS    ':
                 print "Found NTFS OEM ID at sector {0:,} [{0:x}]. Checking...".format(i)
                 self.parse_ntfs(None, infile, i * 512)
+        print "Scan finished."
 
 
 if __name__ == '__main__':
